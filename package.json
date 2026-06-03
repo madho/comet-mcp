@@ -1,0 +1,55 @@
+{
+  "name": "@hermes/comet-mcp",
+  "version": "0.1.0",
+  "description": "Local stdio MCP server for controlling the Perplexity Comet browser on macOS via AppleScript.",
+  "license": "MIT",
+  "author": "Hermes",
+  "type": "module",
+  "bin": {
+    "comet-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "darwin"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "comet",
+    "perplexity",
+    "applescript",
+    "macos",
+    "browser-automation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madho/comet-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/madho/comet-mcp/issues"
+  },
+  "homepage": "https://github.com/madho/comet-mcp#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}
