@@ -72,6 +72,7 @@ test("activeTabScript reads url and title joined by a length prefix", () => {
   assert.ok(script.includes("URL of active tab of front window"));
   assert.ok(script.includes("title of active tab of front window"));
   assert.ok(script.includes("length of theURL"));
+  assert.ok(script.includes("as text"));
 });
 
 test("executeJsScript embeds the snippet and targets the active tab", () => {

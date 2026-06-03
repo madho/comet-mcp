@@ -62,7 +62,7 @@ export function activeTabScript(): string {
     `tell application ${quoteAppleScriptString(COMET_APP_NAME)}`,
     `  set theURL to URL of active tab of front window`,
     `  set theTitle to title of active tab of front window`,
-    `  return (length of theURL) & ":" & theURL & theTitle`,
+    `  return ((length of theURL) as text) & ":" & theURL & theTitle`,
     `end tell`,
   ].join("\n");
 }
