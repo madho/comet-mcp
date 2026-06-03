@@ -5,15 +5,13 @@ import {
   COMET_APP_NAME,
   executeJsScript,
   explainOsascriptError,
-  FIELD_SEPARATOR,
+  isHttpOrHttpsUrl,
   openUrlScript,
   parseActiveTab,
   quoteAppleScriptString,
   versionScript,
   windowCountScript,
 } from "../src/applescript.ts";
-
-const US = String.fromCharCode(31);
 
 test("quoteAppleScriptString wraps a plain string in double quotes", () => {
   assert.equal(quoteAppleScriptString("hello"), '"hello"');
@@ -40,9 +38,12 @@ test("quoteAppleScriptString is injection-safe against a terminating-quote attac
   assert.ok(!/\n/.test(quoted), "newlines must be escaped, not literal");
 });
 
-test("FIELD_SEPARATOR is the ASCII unit separator", () => {
-  assert.equal(FIELD_SEPARATOR.length, 1);
-  assert.equal(FIELD_SEPARATOR.charCodeAt(0), 31);
+test("isHttpOrHttpsUrl accepts http and https only", () => {
+  assert.equal(isHttpOrHttpsUrl("https://example.com"), true);
+  assert.equal(isHttpOrHttpsUrl("http://example.com/path?q=1"), true);
+  assert.equal(isHttpOrHttpsUrl("ftp://example.com"), false);
+  assert.equal(isHttpOrHttpsUrl("javascript:alert(1)"), false);
+  assert.equal(isHttpOrHttpsUrl("not a url"), false);
 });
 
 test("versionScript targets the Comet application", () => {
@@ -66,11 +67,11 @@ test("windowCountScript counts windows", () => {
   assert.ok(windowCountScript().includes("count windows"));
 });
 
-test("activeTabScript reads url and title joined by the separator", () => {
+test("activeTabScript reads url and title joined by a length prefix", () => {
   const script = activeTabScript();
   assert.ok(script.includes("URL of active tab of front window"));
   assert.ok(script.includes("title of active tab of front window"));
-  assert.ok(script.includes("ASCII character 31"));
+  assert.ok(script.includes("length of theURL"));
 });
 
 test("executeJsScript embeds the snippet and targets the active tab", () => {
@@ -86,28 +87,31 @@ test("executeJsScript escapes a snippet containing quotes and newlines", () => {
   );
 });
 
-test("parseActiveTab splits url and title on the separator", () => {
-  const out = `https://example.com${US}Example Domain`;
+test("parseActiveTab splits url and title using a length prefix", () => {
+  const url = "https://example.com";
+  const out = `${url.length}:${url}Example Domain`;
   assert.deepEqual(parseActiveTab(out), {
-    url: "https://example.com",
+    url,
     title: "Example Domain",
   });
 });
 
 test("parseActiveTab strips a trailing newline from osascript", () => {
-  const out = `https://a.test${US}Title\n`;
-  assert.deepEqual(parseActiveTab(out), { url: "https://a.test", title: "Title" });
+  const url = "https://a.test";
+  const out = `${url.length}:${url}Title\n`;
+  assert.deepEqual(parseActiveTab(out), { url, title: "Title" });
 });
 
 test("parseActiveTab tolerates a title with spaces and symbols", () => {
-  const out = `https://a.test/p?q=1${US}A | B — C: D`;
+  const url = "https://a.test/p?q=1";
+  const out = `${url.length}:${url}A | B — C: D`;
   assert.deepEqual(parseActiveTab(out), {
-    url: "https://a.test/p?q=1",
+    url,
     title: "A | B — C: D",
   });
 });
 
-test("parseActiveTab treats a missing separator as url-only", () => {
+test("parseActiveTab treats malformed output as url-only", () => {
   assert.deepEqual(parseActiveTab("https://a.test"), {
     url: "https://a.test",
     title: "",

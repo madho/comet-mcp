@@ -13,7 +13,7 @@ controlling Comet windows and tabs.
 | --- | --- |
 | `comet_version` | Return the installed Comet version. |
 | `comet_activate` | Bring Comet to the foreground (launches it if needed). |
-| `comet_open_url` | Open an absolute URL in Comet (opens a window if none exists). |
+| `comet_open_url` | Open an absolute http/https URL in Comet (opens a window if none exists). |
 | `comet_window_count` | Count open Comet windows. |
 | `comet_get_active_tab` | Return the URL and title of the front window's active tab. |
 | `comet_execute_js` | Run JavaScript in the active tab and return the result. |
@@ -30,6 +30,10 @@ controlling Comet windows and tabs.
 
 `comet_execute_js` will **fail until you enable JavaScript from Apple Events in
 Comet**. This is a per-browser security switch that ships disabled.
+
+Important: once enabled, `comet_execute_js` can run arbitrary JavaScript in the
+active tab and read whatever that page exposes. Only connect this MCP server to
+trusted clients and trusted agents.
 
 Enable it once:
 
@@ -91,8 +95,8 @@ Once connected, an agent can call:
 Each tool builds a small AppleScript and runs it via `osascript -e`. User input
 (URLs, JavaScript) is escaped before being embedded in an AppleScript string
 literal, so quotes and newlines cannot break out of the script. The active-tab
-reader packs the URL and title around an ASCII Unit Separator (`0x1F`) so titles
-containing spaces or punctuation parse unambiguously.
+reader uses a length prefix for the URL and then appends the title, so titles
+containing spaces or punctuation still parse cleanly.
 
 ## Development
 

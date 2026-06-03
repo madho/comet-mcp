@@ -38,6 +38,9 @@
     "url": "https://github.com/madho/comet-mcp/issues"
   },
   "homepage": "https://github.com/madho/comet-mcp#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "node --test --experimental-strip-types test/*.test.ts",

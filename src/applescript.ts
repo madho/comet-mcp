@@ -7,14 +7,6 @@ import { execFile } from "node:child_process";
 export const COMET_APP_NAME = "Comet";
 
 /**
- * Delimiter used to pack multiple values into one AppleScript result.
- * ASCII Unit Separator (0x1F) — never appears in a URL or page title, so it
- * is unambiguous to split on. Built from a char code to avoid embedding a
- * raw control character in source.
- */
-export const FIELD_SEPARATOR = String.fromCharCode(31);
-
-/**
  * Quote an arbitrary JavaScript string so it is safe to embed inside an
  * AppleScript string literal.
  *
@@ -62,15 +54,15 @@ export function windowCountScript(): string {
 
 /**
  * Script: read the URL and title of the active tab of the front window,
- * packed into a single line separated by the ASCII Unit Separator so the two
- * values can be parsed unambiguously even when a title contains spaces.
+ * packed into a single line with a length prefix so the URL can be parsed
+ * unambiguously even when the title contains spaces, punctuation, or colons.
  */
 export function activeTabScript(): string {
   return [
     `tell application ${quoteAppleScriptString(COMET_APP_NAME)}`,
     `  set theURL to URL of active tab of front window`,
     `  set theTitle to title of active tab of front window`,
-    `  return theURL & (ASCII character 31) & theTitle`,
+    `  return (length of theURL) & ":" & theURL & theTitle`,
     `end tell`,
   ].join("\n");
 }
@@ -99,19 +91,34 @@ export interface ActiveTab {
 }
 
 /**
- * Parse the packed `URL<US>TITLE` line produced by {@link activeTabScript}.
+ * Parse the packed `LEN:URLTITLE` line produced by {@link activeTabScript}.
  * Any trailing newline appended by `osascript` is stripped here.
  */
 export function parseActiveTab(output: string): ActiveTab {
   const trimmed = output.replace(/\n$/, "");
-  const index = trimmed.indexOf(FIELD_SEPARATOR);
+  const index = trimmed.indexOf(":");
   if (index === -1) {
     return { url: trimmed, title: "" };
   }
+  const declaredLength = Number.parseInt(trimmed.slice(0, index), 10);
+  if (!Number.isFinite(declaredLength) || declaredLength < 0) {
+    return { url: trimmed, title: "" };
+  }
+  const start = index + 1;
   return {
-    url: trimmed.slice(0, index),
-    title: trimmed.slice(index + FIELD_SEPARATOR.length),
+    url: trimmed.slice(start, start + declaredLength),
+    title: trimmed.slice(start + declaredLength),
   };
+}
+
+/** Return true only for absolute http/https URLs. */
+export function isHttpOrHttpsUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 /** Error thrown when `osascript` exits non-zero, carrying its stderr. */

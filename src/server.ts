@@ -5,6 +5,7 @@ import {
   activeTabScript,
   executeJsScript,
   explainOsascriptError,
+  isHttpOrHttpsUrl,
   openUrlScript,
   OsascriptError,
   parseActiveTab,
@@ -81,11 +82,12 @@ export function createServer(): McpServer {
       title: "Open URL in Comet",
       description:
         "Open a URL in Comet. Launches Comet and opens a window if none exists. " +
-        "The URL must include a scheme (e.g. https://).",
+        "Only http and https URLs are allowed.",
       inputSchema: {
         url: z
           .string()
-          .url("Provide an absolute URL including a scheme, e.g. https://example.com"),
+          .url("Provide an absolute URL including a scheme, e.g. https://example.com")
+          .refine(isHttpOrHttpsUrl, "Only http and https URLs are allowed."),
       },
     },
     ({ url }) => runTool(openUrlScript(url), () => `Opened ${url} in Comet.`),
